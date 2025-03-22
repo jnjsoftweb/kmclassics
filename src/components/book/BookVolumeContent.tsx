@@ -45,11 +45,18 @@ export default function BookVolumeContent({ topLevelContents, bookId }: BookVolu
     if (newExpandedState && !childContents[contentId]) {
       setLoading((prev) => ({ ...prev, [contentId]: true }));
       try {
-        const response = await fetch(
-          `/api/books/${bookId}/children?path=${content.path || ''}&sectId=${content.sectId}&volumeNum=${
-            content.volumeNum
-          }&level=${content.level}`
-        );
+        if (['A', 'X', 'Z'].includes(content.level)) {
+          setChildContents((prev) => ({ ...prev, [contentId]: [] }));
+          return;
+        }
+
+        const newPath = content.path ? `${content.path},${content.sectId}` : content.sectId.toString();
+
+        const response = await fetch(`/api/books/${bookId}/contents?volumeNum=${content.volumeNum}&path=${newPath}`);
+
+        if (!response.ok) {
+          throw new Error('하위 컨텐츠를 가져오는데 실패했습니다.');
+        }
 
         const children = await response.json();
         setChildContents((prev) => ({ ...prev, [contentId]: children }));
@@ -196,7 +203,7 @@ export default function BookVolumeContent({ topLevelContents, bookId }: BookVolu
 
   // 콘텐츠 렌더링 함수 수정
   const renderContent = (content: BookContent) => {
-    const isLeafNode = ['Z', 'X', 'S', 'P'].includes(content.level);
+    const isLeafNode = ['A', 'X', 'Z'].includes(content.level);
 
     return (
       <div key={content.contentId} className={`mb-6 ${getIndentClass(content.depth)}`}>

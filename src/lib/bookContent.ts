@@ -255,3 +255,26 @@ export async function getBookVolumeContent(bookId: string, volumeNum: number, pa
     db.close();
   }
 }
+
+/**
+ * 특정 경로의 하위 컨텐츠를 가져옵니다.
+ * @param bookId 책 ID (예: 'MC_0008')
+ * @param volumeNum 권 번호
+ * @param path 경로 (예: '1,132')
+ * @returns 하위 컨텐츠 배열
+ */
+export async function getBookContents(bookId: string, volumeNum: number, path: string): Promise<BookContent[]> {
+  try {
+    const query = `
+      SELECT * FROM ${bookId}
+      WHERE volumeNum = ? AND path = ?
+      ORDER BY contentId ASC
+    `;
+
+    const contents = await executeQuery<BookContent[]>(query, [volumeNum, path]);
+    return contents;
+  } catch (error) {
+    console.error(`하위 컨텐츠 조회 오류 (${bookId}, 권: ${volumeNum}, 경로: ${path}):`, error);
+    return [];
+  }
+}
