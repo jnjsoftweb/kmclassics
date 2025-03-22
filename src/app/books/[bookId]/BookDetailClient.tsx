@@ -1,10 +1,18 @@
-import { Metadata } from 'next';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
-import { fetchGraphQL, bookQueries } from '@/lib/graphql';
+import Link from 'next/link';
+import { Loader2, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// 책 타입 정의
 interface Book {
   bookId: string;
   bookNum: number;
@@ -37,62 +45,52 @@ interface Book {
   similars?: string;
 }
 
-// GraphQL 응답 타입
-interface BookResponse {
-  book: Book | null;
-}
-
-// 메타데이터 생성 함수
-export async function generateMetadata({ params }: { params: { bookId: string } }): Promise<Metadata> {
-  const bookId = params.bookId;
-
-  // 유효한 bookId인지 확인
-  if (!bookId) {
-    return {
-      title: '잘못된 책 ID',
-      description: '유효하지 않은 책 ID입니다.',
-    };
-  }
-
-  const book = await getBookData(bookId);
-
-  if (!book) {
-    return {
-      title: '책을 찾을 수 없습니다',
-      description: '요청하신 책을 찾을 수 없습니다.',
-    };
-  }
-
-  return {
-    title: `${book.title} | KM Classics`,
-    description: book.abstract || `${book.title} - ${book.author || '저자 미상'}`,
+interface BookDetailClientProps {
+  params: {
+    bookId: string;
   };
 }
 
-// 책 데이터 가져오기
-async function getBookData(bookId: string): Promise<Book | null> {
-  try {
-    const data = await fetchGraphQL<BookResponse>(bookQueries.getBookById, { bookId });
+export default function BookDetailClient({ params }: BookDetailClientProps) {
+  const [book, setBook] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    return data.book;
-  } catch (error) {
-    console.error('책 데이터 조회 오류:', error);
-    return null;
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/books/${params.bookId}`);
+        if (!response.ok) {
+          throw new Error('책 정보를 가져오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        setBook(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, [params.bookId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-lg text-muted-foreground">로딩 중...</p>
+      </div>
+    );
   }
-}
 
-export default async function BookDetailPage({ params }: { params: { bookId: string } }) {
-  const bookId = params.bookId;
-
-  // 유효한 bookId인지 확인
-  if (!bookId) {
-    notFound();
+  if (error) {
+    return <div className="flex justify-center items-center min-h-screen text-red-500">{error}</div>;
   }
-
-  const book = await getBookData(bookId);
 
   if (!book) {
-    notFound();
+    return notFound();
   }
 
   return (
@@ -157,7 +155,23 @@ export default async function BookDetailPage({ params }: { params: { bookId: str
             </CardContent>
             <CardFooter>
               <div className="flex flex-col w-full gap-2">
-                <Button className="w-full">원문 보기</Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="w-full justify-between">
+                      원문 보기
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full">
+                    {Array.from({ length: book.volumes || 1 }, (_, i) => (
+                      <DropdownMenuItem key={i + 1} asChild>
+                        <Link href={`/books/${book.bookId}/volume/${i + 1}`} className="w-full">
+                          {i + 1}권
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 {book.ebooks && (
                   <Button variant="outline" className="w-full">
                     전자책 다운로드
@@ -281,4 +295,4 @@ export default async function BookDetailPage({ params }: { params: { bookId: str
       </div>
     </div>
   );
-}
+} 

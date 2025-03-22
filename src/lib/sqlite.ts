@@ -3,7 +3,7 @@ import path from 'path';
 import * as fs from 'fs';
 
 // SQLite 데이터베이스 파일 경로 설정
-console.log(`process.env.SQLITE_DB_PATH: ${process.env.SQLITE_DB_PATH}`);
+// console.log(`process.env.SQLITE_DB_PATH: ${process.env.SQLITE_DB_PATH}`);
 const DB_PATH = process.env.SQLITE_DB_PATH || 'C:/JnJ-soft/Projects/external/km-classics/sqlite/km-classics__.db';
 
 // 데이터베이스 디렉토리 확인 및 생성

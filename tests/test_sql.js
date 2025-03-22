@@ -1,10 +1,18 @@
 // import { loadJson, sleep } from 'jnu-abc';
 // import Database from 'better-sqlite3';
 import sqlite3 from 'sqlite3';
-// import path from 'path';
-// import fs from 'fs';
+import dotenv from 'dotenv';
 
-const DB_PATH = 'C:/JnJ-soft/Projects/external/km-classics/sqlite/km-classics.db';
+dotenv.config({ path: '../.env' });
+
+const { APP_ROOT_PATH, SQLITE_DB_PATH, BOOKS_PER_PAGE } = process.env;
+
+console.log(`APP_ROOT_PATH: ${APP_ROOT_PATH}`);
+console.log(`SQLITE_DB_PATH: ${SQLITE_DB_PATH}`);
+console.log(`BOOKS_PER_PAGE: ${BOOKS_PER_PAGE}`);
+
+// const DB_PATH = 'C:/JnJ-soft/Projects/external/km-classics/sqlite/km-classics.db';
+const DB_PATH = SQLITE_DB_PATH;
 
 // const dropColumnsFromTables = (tableNames, columnNames = ['contentId', 'bookId']) => {
 const dropColumnsFromTables = (tableNames, columnNames = ['bookId']) => {

@@ -6,6 +6,7 @@ import { BookContent } from '@/lib/bookContent';
 interface BookVolumeContentProps {
   topLevelContents: BookContent[];
   bookId: string;
+  settings: ContentSettings;
 }
 
 interface ContentSettings {
@@ -17,19 +18,14 @@ interface ContentSettings {
   showImage: boolean;
 }
 
-export default function BookVolumeContent({ topLevelContents, bookId }: BookVolumeContentProps) {
+export default function BookVolumeContent({ 
+  topLevelContents, 
+  bookId,
+  settings 
+}: BookVolumeContentProps) {
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
   const [childContents, setChildContents] = useState<Record<number, BookContent[]>>({});
   const [loading, setLoading] = useState<Record<number, boolean>>({});
-  const [settings, setSettings] = useState<ContentSettings>({
-    showChinese: true,
-    showKorean: true,
-    showEnglish: false,
-    showNotes: true,
-    showPosition: true,
-    showImage: true,
-  });
-  const [showSettings, setShowSettings] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
 
@@ -284,83 +280,9 @@ export default function BookVolumeContent({ topLevelContents, bookId }: BookVolu
     );
   };
 
-  const SettingsPanel = () => {
-    return (
-      <div className="mb-4 p-4 bg-white border rounded-lg shadow-lg">
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={settings.showChinese}
-              onChange={(e) => setSettings((prev) => ({ ...prev, showChinese: e.target.checked }))}
-              className="form-checkbox h-4 w-4 text-orange-500"
-            />
-            <span>원문</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={settings.showKorean}
-              onChange={(e) => setSettings((prev) => ({ ...prev, showKorean: e.target.checked }))}
-              className="form-checkbox h-4 w-4 text-orange-500"
-            />
-            <span>번역</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={settings.showEnglish}
-              onChange={(e) => setSettings((prev) => ({ ...prev, showEnglish: e.target.checked }))}
-              className="form-checkbox h-4 w-4 text-orange-500"
-            />
-            <span>영어</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={settings.showNotes}
-              onChange={(e) => setSettings((prev) => ({ ...prev, showNotes: e.target.checked }))}
-              className="form-checkbox h-4 w-4 text-orange-500"
-            />
-            <span>주석</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={settings.showPosition}
-              onChange={(e) => setSettings((prev) => ({ ...prev, showPosition: e.target.checked }))}
-              className="form-checkbox h-4 w-4 text-orange-500"
-            />
-            <span>위치</span>
-          </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={settings.showImage}
-              onChange={(e) => setSettings((prev) => ({ ...prev, showImage: e.target.checked }))}
-              className="form-checkbox h-4 w-4 text-orange-500"
-            />
-            <span>그림</span>
-          </label>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div>
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
-        >
-          설정
-        </button>
-      </div>
-      {showSettings && <SettingsPanel />}
-      <div className="book-content">
-        {topLevelContents.sort((a, b) => a.contentId - b.contentId).map((content) => renderContent(content))}
-      </div>
+    <div className="book-content">
+      {topLevelContents.sort((a, b) => a.contentId - b.contentId).map((content) => renderContent(content))}
     </div>
   );
 }
