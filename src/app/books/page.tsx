@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { fetchGraphQL, bookQueries } from '@/lib/graphql';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
+import { BookSearchInput } from '@/components/book/BookSearchInput';
+import { BookAdvancedSearchModal } from '@/components/book/BookAdvancedSearchModal';
 
 // 메타데이터 설정
 export const metadata: Metadata = {
@@ -31,30 +34,56 @@ interface BooksResponse {
   };
 }
 
+// 페이지 파라미터 타입
+interface PageProps {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+}
+
 // 책 목록 가져오기
-async function getBooks(): Promise<Book[]> {
+async function getBooks(page: number = 1): Promise<{
+  books: Book[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+}> {
   try {
+    const booksPerPage = parseInt(process.env.BOOKS_PER_PAGE || '12');
     const data = await fetchGraphQL<BooksResponse>(bookQueries.getBooks, {
-      page: 1,
-      pageSize: 20,
+      page,
+      pageSize: booksPerPage,
     });
-    return data.books.data || [];
+    return {
+      books: data.books.data,
+      total: data.books.total,
+      totalPages: data.books.totalPages,
+      currentPage: data.books.currentPage,
+    };
   } catch (error) {
     console.error('책 목록 조회 오류:', error);
-    return [];
+    return {
+      books: [],
+      total: 0,
+      totalPages: 0,
+      currentPage: page,
+    };
   }
 }
 
-export default async function BooksPage() {
-  const books = await getBooks();
+export default async function BooksPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const currentPage = parseInt(params.page || '1');
+  const { books, total, totalPages, currentPage: page } = await getBooks(currentPage);
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">도서 목록</h1>
-        <Button asChild>
-          <Link href="/books/search">도서 검색</Link>
-        </Button>
+        <div className="flex items-center gap-4">
+          <BookSearchInput />
+          <BookAdvancedSearchModal />
+        </div>
       </div>
 
       {books.length === 0 ? (
@@ -63,37 +92,45 @@ export default async function BooksPage() {
           <p className="text-gray-600 mb-6">현재 등록된 도서가 없습니다.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {books.map((book) => (
-            <Card key={book.bookId} className="flex flex-col h-full">
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  <Link href={`/books/${book.bookId}`} className="hover:text-blue-600 transition-colors">
-                    {book.title}
-                  </Link>
-                </CardTitle>
-                <CardDescription>
-                  {book.author && `저자: ${book.author}`}
-                  {book.author && book.publishYear && ' | '}
-                  {book.publishYear && `출판년도: ${book.publishYear}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                {book.abstract ? (
-                  <p className="text-gray-600 line-clamp-3">{book.abstract}</p>
-                ) : (
-                  <p className="text-gray-500 italic">초록 정보가 없습니다.</p>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <div className="text-sm text-gray-500">{book.category || '분류 없음'}</div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/books/${book.bookId}`}>자세히 보기</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {books.map((book) => (
+              <Card key={book.bookId} className="flex flex-col h-full">
+                <CardHeader>
+                  <CardTitle className="text-xl">
+                    <Link href={`/books/${book.bookId}`} className="hover:text-blue-600 transition-colors">
+                      {book.title}
+                    </Link>
+                  </CardTitle>
+                  <CardDescription>
+                    {book.author && `저자: ${book.author}`}
+                    {book.author && book.publishYear && ' | '}
+                    {book.publishYear && `출판년도: ${book.publishYear}`}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  {book.abstract ? (
+                    <p className="text-gray-600 line-clamp-3">{book.abstract}</p>
+                  ) : (
+                    <p className="text-gray-500 italic">초록 정보가 없습니다.</p>
+                  )}
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <div className="text-sm text-gray-500">{book.category || '분류 없음'}</div>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/books/${book.bookId}`}>자세히 보기</Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination currentPage={page} totalPages={totalPages} baseUrl="/books" totalItems={total} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
