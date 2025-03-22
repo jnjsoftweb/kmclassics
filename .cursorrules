@@ -1,0 +1,75 @@
+
+
+## Directory Structure Guidelines
+
+### Root Structure
+```
+├── app/                   # Next.js 13+ App Router
+│   ├── (auth)/            # 인증 관련 라우트 그룹
+│   ├── (dashboard)/       # 대시보드 관련 라우트 그룹
+│   ├── api/               # API 라우트 핸들러
+│   └── layout.tsx         # 루트 레이아웃
+├── components/            # 리액트 컴포넌트
+│   ├── ui/               # shadcn UI 컴포넌트
+│   ├── layouts/          # 레이아웃 컴포넌트
+│   └── shared/           # 공통 컴포넌트
+├── hooks/                # 커스텀 훅
+├── lib/                  # 유틸리티 함수
+├── config/              # 설정 파일
+├── types/               # TypeScript 타입 정의
+├── public/              # 정적 파일
+└── styles/              # 전역 스타일
+```
+
+## Component Guidelines
+
+### ShadCN Components
+
+- 모든 UI 컴포넌트는 ShadCN을 사용해야 합니다.
+- 컴포넌트 사용 전 설치 여부를 확인해야 합니다: `components/ui` 디렉토리 체크
+- 컴포넌트 설치 명령어를 사용해야 합니다: `npx shadcn@latest add [component-name]`
+  - ⚠️ 주의: `npx shadcn-ui@latest add` 명령어는 deprecated. 반드시 `npx shadcn@latest add` 사용해야 합니다.
+- ShadCN 컴포넌트의 스타일 수정은 `tailwind.config.ts`의 `theme` 설정을 통해 해야 합니다.
+
+### Styling
+
+- 모든 스타일링은 Tailwind CSS를 사용해야 합니다.
+- 커스텀 CSS는 최소화하고, 필요한 경우 `app/globals.css`에 정의합니다.
+- 반응형 디자인은 Tailwind의 기본 브레이크포인트를 사용합니다: `sm`, `md`, `lg`, `xl`, `2xl`
+- 커스텀 클래스는 `className={cn()}` 유틸리티를 사용하여 조합합니다.
+
+### Icons
+
+- 모든 아이콘은 Lucide React를 사용해야 합니다.
+- 아이콘 임포트 방법: `import { IconName } from "lucide-react"`
+- 예시: `import { Search, Menu } from "lucide-react"`
+- 아이콘 크기와 색상은 Tailwind 클래스를 통해 제어합니다.
+
+### Component Structure
+
+- 컴포넌트는 `/components` 디렉토리 내에 위치해야 합니다.
+- UI 컴포넌트는 `/components/ui` 디렉토리에 위치해야 합니다.
+- 페이지별 컴포넌트는 `/app` 디렉토리 내 해당 라우트에 위치해야 합니다.
+- 재사용 가능한 레이아웃 컴포넌트는 `/components/layouts`에 위치해야 합니다.
+- 공통 훅은 `/hooks` 디렉토리에 위치해야 합니다.
+
+
+
+## Best Practices
+
+- TypeScript 타입은 반드시 정의해야 합니다.
+  - 인터페이스/타입은 컴포넌트 파일 내에 정의하거나, 복잡한 경우 별도의 `types` 디렉토리에 정의
+  - Props 인터페이스는 컴포넌트 이름 뒤에 `Props` 접미사 사용 (예: `ButtonProps`)
+- 컴포넌트는 재사용 가능하도록 설계해야 합니다.
+- 상태 관리가 필요한 경우 React Context 또는 Zustand를 사용합니다.
+- Next.js의 서버 컴포넌트를 기본으로 사용하고, 클라이언트 컴포넌트가 필요한 경우에만 'use client' 지시어를 사용합니다.
+- 이미지는 Next.js의 Image 컴포넌트를 사용해야 합니다.
+- API 통신은 `/app/api` 디렉토리에 라우트 핸들러를 정의하여 처리합니다.
+
+
+## Performance
+
+- 불필요한 리렌더링을 방지하기 위해 `useMemo`, `useCallback`을 적절히 사용합니다.
+- 큰 컴포넌트는 코드 스플리팅을 위해 dynamic import를 사용합니다.
+- 이미지 최적화를 위해 Next.js Image 컴포넌트의 적절한 `sizes` 속성을 설정합니다.
+
